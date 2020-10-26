@@ -52,7 +52,7 @@ public final class ImageHelper {
         mContext = context;
         if (station != null && station.getStationImageFile() != null && station.getStationImageFile().exists()) {
             // get station image
-            mInputImage = decodeSampledBitmapFromFile(station.getStationImageFile().toString(), 72, 72);
+            mInputImage = decodeSampledBitmapFromUri(station.getStationImageFile().getUri(), 72, 72);
         }
         if (mInputImage == null) {
             // set default station image

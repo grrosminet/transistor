@@ -20,9 +20,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.FileUtils;
 import android.os.Handler;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -46,12 +50,14 @@ import org.y20k.transistor.widgets.Widget6C;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -70,6 +76,8 @@ public final class MainActivity extends AppCompatActivity implements TransistorK
     private CollectionViewModel mCollectionViewModel;
     private ArrayList<Station> mStationList;
     private Station mTempStation;
+
+    private int mMainMenuSettingsItem = 0;
 
 
     @Override
@@ -90,6 +98,10 @@ public final class MainActivity extends AppCompatActivity implements TransistorK
 
         // set layout
         setContentView(R.layout.activity_main);
+
+        getSupportActionBar().setHomeButtonEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setIcon(R.mipmap.ic_launcher_round);
 
         // observe changes in LiveData
         mCollectionViewModel.getStationList().observe(this, createStationListObserver());
@@ -126,6 +138,24 @@ public final class MainActivity extends AppCompatActivity implements TransistorK
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        MenuItem item = menu.add(R.string.mainmenu_settings);
+        mMainMenuSettingsItem = item.getItemId();
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if(item != null) {
+            if(item.getItemId() == mMainMenuSettingsItem) {
+                // Start settings activity
+                startActivity(new Intent(this, SettingsActivity.class));
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -173,7 +203,7 @@ public final class MainActivity extends AppCompatActivity implements TransistorK
     public int handleStationAdd(Bundle stationDownloadBundle) {
 
         // get collection folder
-        File folder = StorageHelper.getCollectionDirectory(this);
+        DocumentFile folder = StorageHelper.getCollectionDirectory(this);
 
         // get station, station image and station URL from download bundle
         Station station = null;
@@ -220,7 +250,7 @@ public final class MainActivity extends AppCompatActivity implements TransistorK
         // name of station is new
         if (station != null && newStationName.length() > 0 && !station.getStationName().equals(newStationName)) {
             // get collection folder
-            File folder = StorageHelper.getCollectionDirectory(this);
+            DocumentFile folder = StorageHelper.getCollectionDirectory(this);
 
             // create copies of station and main list of stations
             ArrayList<Station> newStationList = StationListHelper.copyStationList(mStationList);
@@ -233,16 +263,23 @@ public final class MainActivity extends AppCompatActivity implements TransistorK
             newStation.setStationName(newStationName);
 
             // delete old playlist file
-            File stationPlaylistFile = station.getStationPlaylistFile();
+            DocumentFile stationPlaylistFile = station.getStationPlaylistFile();
             stationPlaylistFile.delete();
             // set new playlist file - and write file
             newStation.setStationPlaylistFile(folder);
             newStation.writePlaylistFile(folder);
 
             // rename existing image file
-            File stationImageFile = station.getStationImageFile();
-            newStation.setStationImageFile(folder);
-            stationImageFile.renameTo(newStation.getStationImageFile());
+            try {
+                DocumentFile stationImageFile = station.getStationImageFile();
+                newStation.setStationImageFile(folder);
+                FileUtils.copy(this.getContentResolver().openInputStream(stationImageFile.getUri()),
+                        this.getContentResolver().openOutputStream(newStation.getStationImageFile().getUri()));
+                stationImageFile.delete();
+            }
+            catch(Throwable t) {
+                t.printStackTrace();
+            }
 
             // update list
             newStationList.set(stationID, newStation);
@@ -275,13 +312,13 @@ public final class MainActivity extends AppCompatActivity implements TransistorK
         int stationId = StationListHelper.findStationId(mStationList, station.getStreamUri());
 
         // delete png image file
-        File stationImageFile = station.getStationImageFile();
+        DocumentFile stationImageFile = station.getStationImageFile();
         if (stationImageFile != null && stationImageFile.exists() && stationImageFile.delete()) {
             success = true;
         }
 
         // delete m3u playlist file
-        File stationPlaylistFile = station.getStationPlaylistFile();
+        DocumentFile stationPlaylistFile = station.getStationPlaylistFile();
         if (stationPlaylistFile != null && stationPlaylistFile.exists() && stationPlaylistFile.delete()) {
             success = true;
         }
@@ -352,7 +389,7 @@ public final class MainActivity extends AppCompatActivity implements TransistorK
     private boolean handleStationImageChange(Intent data) {
 
         // get collection folder
-        File folder = StorageHelper.getCollectionDirectory(this);
+        DocumentFile folder = StorageHelper.getCollectionDirectory(this);
 
         // retrieve selected image Uri from image picker
         Bitmap newImage = null;
@@ -363,7 +400,7 @@ public final class MainActivity extends AppCompatActivity implements TransistorK
 
         if (newImage != null && mTempStation != null) {
             // write image to storage
-            try (FileOutputStream out = new FileOutputStream(mTempStation.getStationImageFile())) {
+            try (OutputStream out = getContentResolver().openOutputStream(mTempStation.getStationImageFile().getUri())) {
                 newImage.compress(Bitmap.CompressFormat.PNG, 100, out);
             } catch (IOException e) {
                 LogHelper.e(LOG_TAG, "Unable to save: " + newImage.toString());

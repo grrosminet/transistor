@@ -27,9 +27,15 @@ public class Transistor extends Application {
     /* Define log tag */
     private static final String LOG_TAG = Transistor.class.getSimpleName();
 
+    private static Transistor instance = null;
+
+    public static Transistor getInstance() {
+        return instance;
+    }
 
     @Override
     public void onCreate() {
+        instance = this;
         super.onCreate();
 
         // set Day / Night theme state

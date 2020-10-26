@@ -87,7 +87,7 @@ public class WidgetGridViewFactory implements RemoteViewsService.RemoteViewsFact
     public RemoteViews getViewAt(int i) {
         Station station = this.m_stations.get(i);
         LogHelper.d("TWV",
-                    "Create view for station : [" + i + "]" + station.getStationName() + "(" + station.getStationId() + ") / " + station.getStationImageFile().getAbsolutePath());
+                    "Create view for station : [" + i + "]" + station.getStationName() + "(" + station.getStationId() + ") / " + station.getStationImageFile().getName());
         boolean playing = station.getPlaybackState() != TransistorKeys.PLAYBACK_STATE_STOPPED;
         RemoteViews rv = new RemoteViews(this.m_context.getPackageName(), R.layout.widget_item);
 

@@ -3,7 +3,7 @@
 
     <!-- DAY THEME COLORS -->
     <color name="app_window_background">@color/transistor_white</color>
-    <color name="status_bar_background">@color/transistor_white</color>
+    <color name="status_bar_background">@color/transistor_grey_dark</color>
     <color name="app_onboarding_icons">@color/transistor_grey_dark</color>
 
     <color name="player_sheet_background_main">@color/transistor_grey_darker</color>

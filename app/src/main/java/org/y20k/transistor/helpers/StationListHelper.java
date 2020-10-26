@@ -18,6 +18,8 @@ import android.content.Context;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 
+import androidx.documentfile.provider.DocumentFile;
+
 import org.y20k.transistor.PlayerService;
 import org.y20k.transistor.core.Station;
 
@@ -121,27 +123,17 @@ public final class StationListHelper implements TransistorKeys {
     public static ArrayList<Station> loadStationListFromStorage(Context context) {
 
         // get collection folder
-        File folder = StorageHelper.getCollectionDirectory(context);
-
-        // create folder if necessary
-        if (!folder.exists()) {
-            LogHelper.v(LOG_TAG, "Creating mFolder new folder: " + folder.toString());
-            folder.mkdir();
-        }
+        DocumentFile folder = StorageHelper.getCollectionDirectory(context);
 
         // create nomedia file to prevent media scanning
-        File nomedia = new File(folder, ".nomedia");
-        if (!nomedia.exists()) {
-            LogHelper.v(LOG_TAG, "Creating .nomedia file in folder: " + folder.toString());
-            try (FileOutputStream noMediaOutStream = new FileOutputStream(nomedia)) {
-                noMediaOutStream.write(0);
-            } catch (IOException e) {
-                LogHelper.e(LOG_TAG, "Unable to write .nomedia file in folder: " + folder.toString());
-            }
+        DocumentFile nomedia = folder.findFile(".nomedia");
+        if (nomedia == null) {
+            LogHelper.v(LOG_TAG, "Creating .nomedia file in folder: " + folder.getName() + " (" + folder.getUri() + ")");
+            folder.createFile("", ".nomedia");
         }
 
         // create array of Files from folder
-        File[] listOfFiles = folder.listFiles();
+        DocumentFile[] listOfFiles = folder.listFiles();
 
         // initialize list
         ArrayList<Station> stationList = new ArrayList<Station>();
@@ -155,8 +147,8 @@ public final class StationListHelper implements TransistorKeys {
 
         // fill list of stations
         if (listOfFiles != null) {
-            for (File file : listOfFiles) {
-                if (file.isFile() && file.toString().endsWith(".m3u")) {
+            for (DocumentFile file : listOfFiles) {
+                if (file.isFile() && file.getName().endsWith(".m3u")) {
                     // create new station from file
                     Station newStation = new Station(file);
                     if (newStation.getStreamUri() != null) {

@@ -2,45 +2,44 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="org.y20k.transistor">
-
     <!-- NORMAL PERMISSIONS, automatically granted -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
-    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
-    <!-- DANGEROUS PERMISSIONS, must request -->
+    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" /> <!-- DANGEROUS PERMISSIONS, must request -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:name=".Transistor"
-        android:usesCleartextTraffic="true"
         android:allowAudioPlaybackCapture="true"
         android:allowBackup="true"
-        android:supportsRtl="true"
         android:fullBackupContent="@xml/backupscheme"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/TransistorAppTheme">
+        android:supportsRtl="true"
+        android:theme="@style/TransistorAppTheme"
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/title_activity_settings"></activity>
         <!-- ANDROID AUTO SUPPORT -->
-        <!--  https://developer.android.com/training/auto/audio/ -->
-        <meta-data android:name="com.google.android.gms.car.application"
-            android:resource="@xml/automotive_app_desc"/>
-        <meta-data android:name="com.google.android.gms.car.notification.SmallIcon"
-            android:resource="@mipmap/ic_launcher" />
-        <!-- MEDIA BUTTON RECEIVER -->
+        <!-- https://developer.android.com/training/auto/audio/ -->
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc" />
+        <meta-data
+            android:name="com.google.android.gms.car.notification.SmallIcon"
+            android:resource="@mipmap/ic_launcher" /> <!-- MEDIA BUTTON RECEIVER -->
         <receiver android:name="androidx.media.session.MediaButtonReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".PlayerServiceGateway"></receiver> <!-- WIDGETS -->
+        <activity android:name=".widgets.Widget1CSetup" />
 
-        <receiver android:name=".PlayerServiceGateway">
-        </receiver>
-
-        <!-- WIDGETS -->
-        <activity android:name=".widgets.Widget1CSetup"></activity>
         <receiver
             android:name=".widgets.Widget1C"
             android:label="@string/widget_label_1C">
@@ -52,7 +51,8 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_1_info" />
         </receiver>
-        <receiver android:name=".widgets.Widget2C"
+        <receiver
+            android:name=".widgets.Widget2C"
             android:label="@string/widget_label_2C">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -62,7 +62,8 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_2_info" />
         </receiver>
-        <receiver android:name=".widgets.Widget3C"
+        <receiver
+            android:name=".widgets.Widget3C"
             android:label="@string/widget_label_3C">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -72,7 +73,8 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_3_info" />
         </receiver>
-        <receiver android:name=".widgets.Widget4C"
+        <receiver
+            android:name=".widgets.Widget4C"
             android:label="@string/widget_label_4C">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -82,7 +84,8 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_4_info" />
         </receiver>
-        <receiver android:name=".widgets.Widget5C"
+        <receiver
+            android:name=".widgets.Widget5C"
             android:label="@string/widget_label_5C">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -92,7 +95,8 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_5_info" />
         </receiver>
-        <receiver android:name=".widgets.Widget6C"
+        <receiver
+            android:name=".widgets.Widget6C"
             android:label="@string/widget_label_6C">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -101,19 +105,18 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_6_info" />
-        </receiver>
-
-        <!-- MAIN ACTIVITY -->
+        </receiver> <!-- MAIN ACTIVITY -->
         <activity
             android:name=".MainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout"
             android:label="@string/app_name"
             android:launchMode="singleTop"
-            android:resizeableActivity="true"
-            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout">
+            android:resizeableActivity="true">
 
             <!-- Launcher -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.APP_MUSIC" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -122,14 +125,17 @@
             <!-- Voice control -->
             <intent-filter>
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <!-- handle file extension intent from web browser -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:host="*" />
@@ -141,8 +147,10 @@
             <!-- handle mimetype intent from web browser -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:host="*" />
@@ -159,7 +167,9 @@
             <!-- handle file extension intent from file browser -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:scheme="content" />
                 <data android:host="*" />
                 <data android:mimeType="audio/x-scpls" />
@@ -172,10 +182,10 @@
             </intent-filter>
 
             <!-- App Shortcuts -->
-            <meta-data android:name="android.app.shortcuts"
+            <meta-data
+                android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
-        </activity>
-        <!-- PLAYER SERVICE -->
+        </activity> <!-- PLAYER SERVICE -->
         <!-- android:exported="true" if used with Android Auto -->
         <service
             android:name=".PlayerService"
@@ -183,7 +193,7 @@
             android:stopWithTask="false"
             tools:ignore="ExportedService">
             <intent-filter>
-                <action android:name="android.media.browse.MediaBrowserService"/>
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
             <intent-filter>
                 <action android:name="org.y20k.transistor.action.PLAY" />
@@ -193,16 +203,12 @@
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
-        </service>
-        <!-- SLEEP TIMER SERVICE -->
+        </service> <!-- SLEEP TIMER SERVICE -->
+        <service android:name=".helpers.SleepTimerService"></service> <!-- GridView Adapter for widgets -->
         <service
-            android:name=".helpers.SleepTimerService">
-        </service>
-
-        <!-- GridView Adapter for widgets -->
-        <service android:name=".widgets.WidgetGridService"
-            android:permission="android.permission.BIND_REMOTEVIEWS"
-            android:exported="false"/>
+            android:name=".widgets.WidgetGridService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
     </application>
 
 </manifest>

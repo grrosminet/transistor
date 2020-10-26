@@ -30,6 +30,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
@@ -293,7 +294,7 @@ public final class CollectionAdapter extends RecyclerView.Adapter<RecyclerView.V
 
 
     /* Setter for image file within station object with given ID */
-    public void setNewImageFile(int stationId, File stationImageFile) {
+    public void setNewImageFile(int stationId, DocumentFile stationImageFile) {
         mStationList.get(stationId).setStationImageFile(stationImageFile);
     }
 

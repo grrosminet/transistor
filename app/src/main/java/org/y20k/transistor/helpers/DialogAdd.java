@@ -22,6 +22,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
+import androidx.documentfile.provider.DocumentFile;
+
 import org.y20k.transistor.R;
 
 import java.io.File;
@@ -37,7 +39,7 @@ public final class DialogAdd {
 
 
     /* Construct and show dialog */
-    public static void show(final Activity activity, final File folder) {
+    public static void show(final Activity activity, final DocumentFile folder) {
         // prepare dialog builder
         LayoutInflater inflater = LayoutInflater.from(activity);
         final AlertDialog.Builder builder = new AlertDialog.Builder(activity);

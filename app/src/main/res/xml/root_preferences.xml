@@ -1,0 +1,16 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/settings_collection_grp_title">
+
+        <CheckBoxPreference
+            app:key="@string/settings_collection_use_default_key"
+            app:title="@string/settings_collection_use_default"
+            app:defaultValue="@string/settings_collection_use_default_default"/>
+
+        <Preference
+            app:key="@string/settings_collection_custom_key"
+            app:title="@string/settings_collection_custom"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

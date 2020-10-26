@@ -16,6 +16,7 @@ package org.y20k.transistor.core;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -25,7 +26,9 @@ import android.os.Parcelable;
 import android.support.v4.media.MediaMetadataCompat;
 
 import androidx.annotation.NonNull;
+import androidx.documentfile.provider.DocumentFile;
 
+import org.y20k.transistor.Transistor;
 import org.y20k.transistor.helpers.LogHelper;
 import org.y20k.transistor.helpers.TransistorKeys;
 
@@ -39,6 +42,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -66,10 +71,10 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
 
     /* Main class variables */
-    private File mStationImageFile;
+    private DocumentFile mStationImageFile;
     private long mStationImageSize;
     private String mStationName;
-    private File mStationPlaylistFile;
+    private DocumentFile mStationPlaylistFile;
     private Uri mStreamUri;
     private String mPlaylistFileContent;
     private int mPlayback;
@@ -81,9 +86,9 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
     private int mBitrate;
     private Bundle mStationFetchResults;
 
-
     /* Generic Constructor */
-    public Station(File stationImageFile, long stationImageSize, String stationName, File stationPlaylistFile, Uri streamUri, String playlistFileContent, int playback, boolean selected, String metadata, String mimeType, int channelCount, int sampleRate, int bitrate, Bundle stationFetchResults) {
+    public Station(DocumentFile stationImageFile, long stationImageSize, String stationName, DocumentFile stationPlaylistFile, Uri streamUri,
+                   String playlistFileContent, int playback, boolean selected, String metadata, String mimeType, int channelCount, int sampleRate, int bitrate, Bundle stationFetchResults) {
         mStationImageFile = stationImageFile;
         mStationImageSize = stationImageSize;
         mStationName = stationName;
@@ -102,7 +107,7 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
 
     /* Constructor when given file from the Collection folder */
-    public Station(File file) {
+    public Station(DocumentFile file) {
         // create results bundle
         mStationFetchResults = new Bundle();
 
@@ -116,7 +121,7 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
         parse(mPlaylistFileContent);
 
         // set image file object
-        File folder = mStationPlaylistFile.getParentFile();
+        DocumentFile folder = mStationPlaylistFile.getParentFile();
         if (folder != null) {
             setStationImageFile(folder);
         }
@@ -127,7 +132,7 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
 
     /* Constructor when given folder and remote location (-> the internet) */
-    public Station(File folder, URL fileLocation) {
+    public Station(DocumentFile folder, URL fileLocation) {
         // create results bundle
         mStationFetchResults = new Bundle();
 
@@ -197,12 +202,12 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
 
     /* Constructor when given folder and file on sd card */
-    public Station(File folder, ContentResolver contentResolver, Uri uri) {
+    public Station(DocumentFile folder, ContentResolver contentResolver, Uri uri) {
         // create results bundle
         mStationFetchResults = new Bundle();
 
         // get file from Uri
-        mStationPlaylistFile = new File(uri.getPath());
+        mStationPlaylistFile = DocumentFile.fromSingleUri(Transistor.getInstance().getApplicationContext(), uri);
 
         // read local file and put result into mPlaylistFileContent
         mPlaylistFileContent = readPlaylist(getInputStream(contentResolver, uri));
@@ -245,11 +250,14 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
         mStreamUri = Uri.parse(stationMediaMetadata.getString(METADATA_KEY_MEDIA_URI));
         mPlayback = PLAYBACK_STATE_STOPPED;
         if (stationMediaMetadata.getString(METADATA_CUSTOM_KEY_IMAGE_FILE) != null) {
-            mStationImageFile = new File(stationMediaMetadata.getString(METADATA_CUSTOM_KEY_IMAGE_FILE));
+            mStationImageFile = DocumentFile.fromSingleUri(Transistor.getInstance().getApplicationContext(),
+                    Uri.parse(stationMediaMetadata.getString(METADATA_CUSTOM_KEY_IMAGE_FILE)));
             mStationImageSize = mStationImageFile.length();
         }
         if (stationMediaMetadata.getString(METADATA_CUSTOM_KEY_PLAYLIST_FILE) != null) {
-            mStationPlaylistFile = new File(stationMediaMetadata.getString(METADATA_CUSTOM_KEY_PLAYLIST_FILE));
+            mStationPlaylistFile =
+                    DocumentFile.fromSingleUri(Transistor.getInstance().getApplicationContext(),
+                            Uri.parse(stationMediaMetadata.getString(METADATA_CUSTOM_KEY_PLAYLIST_FILE)));
         }
 //        mPlaylistFileContent = "";
 //        mMetadata = "";
@@ -269,10 +277,10 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
     /* Constructor used by CREATOR */
     protected Station(Parcel in) {
-        mStationImageFile = new File (in.readString());
+        mStationImageFile = DocumentFile.fromSingleUri (Transistor.getInstance().getApplicationContext(), Uri.parse(in.readString()));
         mStationImageSize = in.readLong();
         mStationName = in.readString();
-        mStationPlaylistFile = new File (in.readString());
+        mStationPlaylistFile = DocumentFile.fromSingleUri (Transistor.getInstance().getApplicationContext(), Uri.parse(in.readString()));
         mStreamUri = in.readParcelable(Uri.class.getClassLoader());
         mPlaylistFileContent = in.readString();
         mStationFetchResults = in.readBundle(Bundle.class.getClassLoader());
@@ -417,9 +425,9 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
 
     /* Get InputStream from File */
-    private InputStream getInputStream(File file) {
+    private InputStream getInputStream(DocumentFile file) {
         try {
-            return new FileInputStream(file);
+            return Transistor.getInstance().getApplicationContext().getContentResolver().openInputStream(file.getUri());
         } catch (FileNotFoundException e) {
             LogHelper.e(LOG_TAG, "Unable open file: " + e.toString());
             return null;
@@ -437,7 +445,15 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
         }
     }
 
-
+    private OutputStream getOutputStream(DocumentFile file) {
+        try {
+            return Transistor.getInstance().getApplicationContext().getContentResolver().openOutputStream(file.getUri());
+        }
+        catch (Throwable e) {
+            LogHelper.e(LOG_TAG, "Unable open file: " + e.toString());
+            return null;
+        }
+    }
 
     /* Returns content type for given Uri */
     private ContentType getContentType(Uri streamUri) {
@@ -632,7 +648,7 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
 
     /* Writes station as m3u to storage */
-    public void writePlaylistFile(File folder) {
+    public void writePlaylistFile(DocumentFile folder) {
 
         setStationPlaylistFile(folder);
 
@@ -644,7 +660,7 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
         String m3uString = createM3u();
 
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(mStationPlaylistFile))) {
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(getOutputStream(mStationPlaylistFile)))) {
             bw.write(m3uString);
         } catch (IOException e) {
             LogHelper.e(LOG_TAG, "Unable to write PlaylistFile " + mStationPlaylistFile.toString());
@@ -770,7 +786,7 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
         if (stationImage != null) {
             // write image to storage
-            try (FileOutputStream out = new FileOutputStream(mStationImageFile)) {
+            try (OutputStream out = getOutputStream(mStationImageFile)) {
                 stationImage.compress(Bitmap.CompressFormat.PNG, 100, out);
                 LogHelper.v(LOG_TAG, "Writing favicon to storage.");
             } catch (IOException e) {
@@ -797,13 +813,13 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
 
     /* Getter for playlist file object representing station */
-    public File getStationPlaylistFile() {
+    public DocumentFile getStationPlaylistFile() {
         return mStationPlaylistFile;
     }
 
 
     /* Getter for file object representing station image */
-    public File getStationImageFile() {
+    public DocumentFile getStationImageFile() {
         return mStationImageFile;
     }
 
@@ -881,13 +897,16 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
 
     /* Setter for playlist file object of station */
-    public void setStationPlaylistFile(File folder) {
+    public void setStationPlaylistFile(DocumentFile folder) {
         if (mStationName != null) {
             // strip out problematic characters
             String stationNameCleaned = mStationName.replaceAll("[:/]", "_");
             // construct location of m3u playlist file from station name and folder
-            String fileLocation = folder.toString() + "/" + stationNameCleaned + ".m3u";
-            mStationPlaylistFile = new File(fileLocation);
+            String fileName = stationNameCleaned + ".m3u";
+            mStationPlaylistFile = folder.findFile(fileName);
+            if(mStationPlaylistFile == null)
+                mStationPlaylistFile = folder.createFile("audio/x-mpegurl", fileName);
+
         } else {
             mStationPlaylistFile = null;
         }
@@ -895,13 +914,15 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
 
     /* Setter for image file object of station */
-    public void setStationImageFile(File folder) {
+    public void setStationImageFile(DocumentFile folder) {
         if (mStationName != null) {
             // strip out problematic characters
             String stationNameCleaned = mStationName.replaceAll("[:/]", "_");
             // construct location of png image file from station name and folder
-            String fileLocation = folder.toString() + "/" + stationNameCleaned + ".png";
-            mStationImageFile = new File(fileLocation);
+            String fileName = stationNameCleaned + ".png";
+            mStationImageFile = folder.findFile(fileName);
+            if(mStationImageFile == null)
+                mStationImageFile = folder.createFile("image/png", fileName);
             mStationImageSize = mStationImageFile.length();
         } else {
             mStationImageFile = null;
@@ -985,7 +1006,7 @@ public final class Station implements TransistorKeys, Cloneable, Comparable<Stat
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(mStationImageFile.toString());
+        dest.writeString(mStationImageFile.getUri().toString());
         dest.writeLong(mStationImageSize);
         dest.writeString(mStationName);
         dest.writeString(mStationPlaylistFile.toString());

@@ -15,9 +15,16 @@
 package org.y20k.transistor.helpers;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Environment;
+import android.util.Log;
 
 import androidx.core.os.EnvironmentCompat;
+import androidx.documentfile.provider.DocumentFile;
+import androidx.preference.PreferenceManager;
+
+import org.y20k.transistor.R;
 
 import java.io.File;
 
@@ -32,21 +39,21 @@ public final class StorageHelper {
 
 
     /* Getter for collection directory */
-    public static File getCollectionDirectory(Context context) {
+    public static DocumentFile getCollectionDirectory(Context context) {
         return findCollectionDirectory(context);
     }
 
 
     /* Checks if given folder holds any m3u files */
     public static boolean storageHasStationPlaylistFiles(Context context) {
-        File collectionDirectory = findCollectionDirectory(context);
+        DocumentFile collectionDirectory = findCollectionDirectory(context);
         if (!collectionDirectory.isDirectory()) {
             LogHelper.i(LOG_TAG, "Given file object is not a directory.");
             return false;
         }
-        File[] listOfFiles = collectionDirectory.listFiles();
-        for (File file : listOfFiles) {
-            if (file.getPath().endsWith(".m3u")) {
+        DocumentFile[] listOfFiles = collectionDirectory.listFiles();
+        for (DocumentFile file : listOfFiles) {
+            if (file.getName().endsWith(".m3u")) {
                 return true;
             }
         }
@@ -56,7 +63,26 @@ public final class StorageHelper {
 
 
     /* Return a write-able sub-directory from external storage  */
-    private static File findCollectionDirectory(Context context) {
+    private static DocumentFile findCollectionDirectory(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        if(!prefs.getBoolean(context.getString(R.string.settings_collection_use_default_key), false)) {
+            String s = prefs.getString(context.getString(R.string.settings_collection_custom_key), "");
+            if (s != null || s.trim().length() > 0) {
+                Uri uri = Uri.parse(s);
+                try {
+                    DocumentFile doc = DocumentFile.fromTreeUri(context, uri);
+                    if (doc != null && doc.exists() && doc.isDirectory()) {
+                        return doc;
+                    } else {
+                        Log.e("Storage", "Unable to read uri " + s + " ... network error ?");
+                    }
+                }
+                catch(Throwable t) {
+                    Log.e("CCF", "Erreur sur l'URI " + s + " : " + t.getMessage());
+                }
+            }
+        }
+
         String subDirectory = "Collection";
         File[] storage = context.getExternalFilesDirs(subDirectory);
         for (File file : storage) {
@@ -64,7 +90,9 @@ public final class StorageHelper {
                 String state = EnvironmentCompat.getStorageState(file);
                 if (Environment.MEDIA_MOUNTED.equals(state)) {
                     LogHelper.v(LOG_TAG, "External storage: " + file.toString());
-                    return file;
+                    if(!file.exists())
+                        file.mkdirs();
+                    return DocumentFile.fromFile(file);
                 }
             }
         }

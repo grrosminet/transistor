@@ -21,6 +21,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.documentfile.provider.DocumentFile;
+
 import org.y20k.transistor.MainActivity;
 import org.y20k.transistor.R;
 import org.y20k.transistor.core.Station;
@@ -41,7 +43,7 @@ public final class StationFetcher extends AsyncTask<Void, Void, Bundle> implemen
 
     /* Main class variables */
     private final Activity mActivity;
-    private final File mFolder;
+    private final DocumentFile mFolder;
     private final Uri mStationUri;
     private final String mStationName;
     private final String mStationUriScheme;
@@ -50,7 +52,7 @@ public final class StationFetcher extends AsyncTask<Void, Void, Bundle> implemen
 
 
     /* Constructor */
-    public StationFetcher(Activity activity, File folder, Uri stationUri, String stationName) {
+    public StationFetcher(Activity activity, DocumentFile folder, Uri stationUri, String stationName) {
         mActivity = activity;
         mFolder = folder;
         mStationUri = stationUri;

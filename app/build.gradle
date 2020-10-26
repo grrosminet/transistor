@@ -16,6 +16,7 @@ android {
         versionCode 71
         versionName '3.2.4'
 
+
         vectorDrawables.useSupportLibrary = true
         resConfigs "en", "ar", "ca", "cs","de", "el", "es", "eu", "fr", "id", "in", "it", "ja", "kab", "nb-rNO", "nl", "pa", "pl", "pt", "pt-rBR", "ru", "sk", "sl", "sr", "th", "tr", "uk", "zh-rCN"
     }
@@ -35,7 +36,6 @@ android {
     }
 }
 
-
 dependencies {
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
@@ -52,6 +52,7 @@ dependencies {
 
     implementation "com.google.android.exoplayer:exoplayer-core:2.10.8"
     implementation "com.google.android.exoplayer:exoplayer-hls:2.10.8"
+    implementation 'androidx.preference:preference:1.1.0'
 
 }
 

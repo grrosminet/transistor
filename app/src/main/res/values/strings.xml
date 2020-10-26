@@ -3,6 +3,8 @@
     <!-- activities -->
     <string name="app_name">Transistor</string>
     <!-- please do not translate app_name - transcription into different alphabet types is fine though -->
+    <!-- main menu entrie -->
+    <string name="mainmenu_settings">Settings</string>
     <!-- app shortcuts -->
     <string name="shortcut_last_station_short_label">Last station</string>
     <string name="shortcut_last_station_long_label">Play last station</string>
@@ -116,10 +118,22 @@
     <!-- Version 3 of Transistor removes the screens infosheet_howto and infosheet_about.
     The last version containing those strings is v2.3.7
     https://github.com/y20k/transistor/tree/v2.3.7/app/src/main/res -->
+
+    <!-- widgets labels -->
     <string name="widget_label_1C">Transistor 1C</string>
     <string name="widget_label_2C">Transistor 2C</string>
     <string name="widget_label_3C">Transistor 3C</string>
     <string name="widget_label_4C">Transistor 4C</string>
     <string name="widget_label_5C">Transistor 5C</string>
     <string name="widget_label_6C">Transistor 6C</string>
+
+    <!-- settings activity -->
+    <string name="title_activity_settings">Settings</string>
+    <string name="settings_collection_grp_title">Collection</string>
+    <string name="settings_collection_use_default">Use default collection folder</string>
+    <string name="settings_collection_use_default_key">default_collection_folder</string>
+    <string name="settings_collection_use_default_default">true</string>
+    <string name="settings_collection_custom">Custom collection folder</string>
+    <string name="settings_collection_custom_key">custom_collection_folder</string>
+
 </resources>
